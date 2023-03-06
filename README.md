@@ -1,6 +1,6 @@
 # Logs
-![version](https://img.shields.io/badge/version-0.1.0-blue.svg)
-![godoc](https://godoc.org/github.com/hispano/go-backend?status.svg)
+![version](https://img.shields.io/badge/version-1.0.1-blue.svg)
+[![Go Reference](https://pkg.go.dev/badge/github.com/fsandov/logs.svg)](https://pkg.go.dev/github.com/fsandov/logs)
 
 ## Description
 
