@@ -28,6 +28,10 @@ type Service struct {
 	FileLog bool
 	// fileName is the name of the file where the logs will be saved. It is used internally.
 	fileName string
+	// ShowDate is a boolean that indicates if the date should be shown in the logs. If it is true, the date will be shown in the logs.
+	ShowDate bool
+	// ShowTime is a boolean that indicates if the time should be shown in the logs. If it is true, the time will be shown in the logs.
+	ShowTime bool
 }
 
 // NewService returns a new instance of a Service of logs with the configuration provided.
@@ -45,6 +49,8 @@ func NewService(config Service) Service {
 		URL:      config.URL,
 		FileLog:  config.FileLog,
 		fileName: fileName,
+		ShowDate: config.ShowDate,
+		ShowTime: config.ShowTime,
 	}
 }
 
@@ -88,29 +94,35 @@ const (
 
 // logBuilder is the function that builds the logs. It is used internally. It receives the content of the log.
 // It returns the content of the log built. This is used to orchestrate the type of logs.
-func (s Service) logBuilder(mL string, callerLevel string, message string, extraMessage ...string) string {
-	switch mL {
+func (s Service) logBuilder(messageLevel string, callerLevel string, message string, extraMessage ...string) string {
+	switch messageLevel {
 	case logInfo:
 		extraMessageSTR := ""
 		if callerLevel == caller {
 			extraMessageSTR = strings.Join(extraMessage, " ")
 		}
+		logMessage := ""
 		msg := fmt.Sprintf(message + " " + extraMessageSTR)
+		if s.ShowDate {
+			logMessage += fmt.Sprintf("[%s]", time.Now().Format("2006-01-02"))
+		}
+		if s.ShowTime {
+			logMessage += fmt.Sprintf("[%s]", time.Now().Format("15:04:05.999"))
+		}
 		return fmt.Sprintf(
-			"[%s][%s][%s]-[%s] %s",
-			time.Now().Format("2006-01-02"),
-			time.Now().Format("15:04:05.999"),
+			"%s[%s]-[%s] %s",
+			logMessage,
 			s.NameApp,
-			mL,
+			messageLevel,
 			msg)
 	default:
-		return s.logDecorator(mL, callerLevel, message, extraMessage...)
+		return s.logDecorator(messageLevel, callerLevel, message, extraMessage...)
 	}
 }
 
 // logDecorator is the function that decorates the logs. It is used internally. It receives the content of the log.
 // It returns the content of the log decorated.
-func (s Service) logDecorator(mL string, callerLevel string, message string, extraMessage ...string) string {
+func (s Service) logDecorator(messageLevel string, callerLevel string, message string, extraMessage ...string) string {
 	callerLevelINT, err := strconv.Atoi(callerLevel)
 	if err != nil {
 		callerLevelINT, _ = strconv.Atoi(caller)
@@ -125,13 +137,19 @@ func (s Service) logDecorator(mL string, callerLevel string, message string, ext
 	if callerLevel == caller {
 		extraMessageSTR = strings.Join(extraMessage, " ")
 	}
+	logMessage := ""
 	msg := fmt.Sprintf(message + " " + extraMessageSTR)
+	if s.ShowDate {
+		logMessage += fmt.Sprintf("[%s]", time.Now().Format("2006-01-02"))
+	}
+	if s.ShowTime {
+		logMessage += fmt.Sprintf("[%s]", time.Now().Format("15:04:05.999"))
+	}
 	return fmt.Sprintf(
-		"[%s][%s][%s]-[%s] %s:%d:%s(): %s",
-		time.Now().Format("2006-01-02"),
-		time.Now().Format("15:04:05.999"),
+		"%s[%s]-[%s] %s:%d:%s(): %s",
+		logMessage,
 		s.NameApp,
-		mL,
+		messageLevel,
 		file,
 		line,
 		name,
@@ -147,7 +165,6 @@ func (s Service) registerOrchestrator(content string) {
 	if s.FileLog {
 		s.registerFileLog(content)
 	}
-
 }
 
 // registerFileLog saves the logs in a file. The function creates a folder called "logs" in the same folder where the application is running.
